@@ -987,9 +987,9 @@ log::add('alexafiretv', 'info', " failed command shell status=$status\n");*/
         return str_replace('#volume#', $_options['slider'], $request);
     }
 
-    public function getWidgetTemplateCode($_version = 'dashboard', $_noCustom = false)
+    public function getWidgetTemplateCode($_version = 'dashboard', $_clean = true, $_widgetName = '')
     {
-        if ($_version != 'scenario') return parent::getWidgetTemplateCode($_version, $_noCustom);
+        if ($_version != 'scenario') return parent::getWidgetTemplateCode($_version, $_clean, $_widgetName);
         list($command, $arguments) = explode('?', $this->getConfiguration('request'), 2);
         if (($command == 'speak') || ($command == 'announcement'))
             return getTemplate('core', 'scenario', 'cmd.speak.volume', 'alexafiretv');
@@ -1003,7 +1003,7 @@ log::add('alexafiretv', 'info', " failed command shell status=$status\n");*/
             return getTemplate('core', 'scenario', 'cmd.command', 'alexafiretv');
         if ($command == 'alarm')
             return getTemplate('core', 'scenario', 'cmd.alarm', 'alexafiretv');
-        return parent::getWidgetTemplateCode($_version, $_noCustom);
+        return parent::getWidgetTemplateCode($_version, $_clean, $_widgetName);
     }
 }
 /*
