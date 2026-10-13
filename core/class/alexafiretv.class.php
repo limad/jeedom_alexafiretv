@@ -29,9 +29,27 @@ class alexafiretv extends eqLogic
     }
 
 
+  /**
+   * Valide l'adresse d'un Fire TV (IP ou nom d'hôte) avant son usage dans une commande shell.
+   * @return string|false l'adresse nettoyée, ou false si invalide.
+   */
+  public static function safeAdbHost($_adresseip)
+    {
+	$host = trim((string) $_adresseip);
+	if ($host !== '' && (filter_var($host, FILTER_VALIDATE_IP) !== false || preg_match('/^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$/', $host))) {
+		return $host;
+	}
+	return false;
+  	}
+
   public function lanceCmd($_name,$_cmd)
     {
-	$commande=self::prefixeRoot() . "adb -s ".$this->getConfiguration('adresseip').":5555 shell ". $_cmd;
+	$host = self::safeAdbHost($this->getConfiguration('adresseip'));
+	if ($host === false) {
+		log::add('alexafiretv', 'warning', "╠═══> Adresse IP invalide pour ".$this->getName().", commande ".$_name." ignorée");
+		return '';
+	}
+	$commande=self::prefixeRoot() . "adb -s ".escapeshellarg($host.":5555")." shell ". $_cmd;
 	log::add('alexafiretv', 'debug', '╠═══> Lancement de la commande '.$_name.' => '.$commande);
 	$reponse=trim(exec($commande));
 	log::add('alexafiretv', 'info', " ╠═══> Récupération de ".$_name.' = '.$reponse);
@@ -40,10 +58,7 @@ class alexafiretv extends eqLogic
 
   public function prefixeRoot()
     {
-	$testRoot="";
-	$root = exec("\$EUID");
-	if ($root != "0") $testRoot = "sudo ";
-	return $testRoot;
+	return (function_exists('posix_geteuid') && posix_geteuid() === 0) ? "" : "sudo ";
   	}
 
 
@@ -55,7 +70,12 @@ class alexafiretv extends eqLogic
 		log::add('alexafiretv', 'warning', "╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
 		return false;
 	}
-	$commande=self::prefixeRoot() . "adb devices | grep " . $_adresseip . " | cut -f2 | xargs";
+	$host = self::safeAdbHost($_adresseip);
+		if ($host === false) {
+			log::add('alexafiretv', 'warning', "╠═══> Adresse IP invalide dans la configuration de ".$_name);
+			return false;
+		}
+		$commande=self::prefixeRoot() . "adb devices | grep " . escapeshellarg($host) . " | cut -f2 | xargs";
 	log::add('alexafiretv', 'info', " ╔══════════════════════[Test connexion à ".$_name."]════════════════════════════════════════════════════════════════════════════");
 	log::add('alexafiretv', 'debug', "╠═══> Envoi de ".$commande);
 	$reponse=exec($commande);
@@ -91,7 +111,12 @@ class alexafiretv extends eqLogic
     {
         log::add('alexafiretv', 'info', ' ╠══════> On tente une connexion à '.$_name);
         log::add('alexafiretv', 'debug', '╠══════> Connexion au périphérique '.$_adresseip.' en cours - Envoi de adb connect '.$_adresseip);
-        $reponse=exec(self::prefixeRoot() . "adb connect ".$_adresseip);
+        $host = self::safeAdbHost($_adresseip);
+        if ($host === false) {
+            log::add('alexafiretv', 'warning', ' ╠═══> Adresse IP invalide, connexion à '.$_name.' annulée');
+            return false;
+        }
+        $reponse=exec(self::prefixeRoot() . "adb connect ".escapeshellarg($host));
 	log::add('alexafiretv', 'debug', "╠═══> Résultat [".$reponse."]");
 		switch (substr(trim($reponse),0,6)) {
 		
@@ -677,9 +702,11 @@ class alexafiretvCmd extends cmd
     {
 		//	 		log::add('alexafiretv', 'debug', 'LANCE lanceCommande cmd');
 
-	if ($this->getEqLogic()->testFireTVConnexion($this->getEqLogic()->getName(), $this->getEqLogic()->getConfiguration('adresseip'))) {
+	$reponse = '';
+		$host = alexafiretv::safeAdbHost($this->getEqLogic()->getConfiguration('adresseip'));
+		if ($host !== false && $this->getEqLogic()->testFireTVConnexion($this->getEqLogic()->getName(), $host)) {
 	log::add('alexafiretv', 'info', " ╔══════════════════════[Lance Commande Action ".$_name."]════════════════════════════════════════════════════════════════════════════");
-	$commande=self::prefixeRoot2() . "adb -s ".$this->getEqLogic()->getConfiguration('adresseip').":5555 shell ". $_cmd ;
+	$commande=self::prefixeRoot2() . "adb -s ".escapeshellarg($host.":5555")." shell ". $_cmd ;
 	//$commande="sudo adb -s 192.168.0.38:5555 shell dumpsys window displays | grep init | cut -c45-53";
 	//$commande="ls ";
 //	$reponse=trim(shell_exec($commande));
@@ -703,10 +730,7 @@ log::add('alexafiretv', 'info', " failed command shell status=$status\n");*/
 	
   public function prefixeRoot2()
     {
-	$testRoot="";
-	$root = exec("\$EUID");
-	if ($root != "0") $testRoot = "sudo ";
-	return $testRoot;
+	return (function_exists('posix_geteuid') && posix_geteuid() === 0) ? "" : "sudo ";
   	}
 	
     public function execute($_options = null)
