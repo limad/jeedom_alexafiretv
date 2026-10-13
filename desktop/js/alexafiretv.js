@@ -15,7 +15,6 @@
 
 */
 
-
 $('#bt_forcerDefaultCmd').off('click').on('click', function () {
   var dialog_title = '{{Recharge configuration par défaut}}';
   var dialog_message = '<form class="form-horizontal onsubmit="return false;"> ';
@@ -70,27 +69,6 @@ $('#bt_forcerDefaultCmd').off('click').on('click', function () {
 
 });
 
-
-$('#bt_Lancer').off('click').on('click', function () {
-  var tempo = 0;
-  if (requeteremotevidecache.checked) {
-    tempo = 2000;
-    jeedom.log.clear({
-      log: log_display_name,
-    });
-  }
-
-  setTimeout("envoiQuery(requeteremote.value, requetedata.value)", tempo);
-
-
-  //console.log ("fini");
-});
-
-$('#bt_resetEqlogicSearch').on('click', function () {
-  $('#in_searchEqlogic').val('')
-  $('#in_searchEqlogic').keyup()
-})
-
 $('#in_searchEqlogic2').off('keyup').keyup(function () {
   var search = $(this).value().toLowerCase();
   search = search.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
@@ -114,49 +92,6 @@ $('#bt_resetEqlogicSearch2').on('click', function () {
   $('#in_searchEqlogic2').keyup()
 })
 
-$('#in_searchEqlogic3').off('keyup').keyup(function () {
-  var search = $(this).value().toLowerCase();
-  search = search.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-  if (search == '') {
-    $('.eqLogicDisplayCard.third').show();
-    $('.eqLogicThumbnailContainer.third').packery();
-    return;
-  }
-  $('.eqLogicDisplayCard.third').hide();
-  $('.eqLogicDisplayCard.third .name').each(function () {
-    var text = $(this).text().toLowerCase();
-    text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-    if (text.indexOf(search) >= 0) {
-      $(this).closest('.eqLogicDisplayCard.third').show();
-    }
-  });
-  $('.eqLogicThumbnailContainer.third').packery();
-});
-$('#bt_resetEqlogicSearch3').on('click', function () {
-  $('#in_searchEqlogic3').val('')
-  $('#in_searchEqlogic3').keyup()
-})
-
-
-function envoiQuery(query, data) {
-  //if (query=='') query='{"host":"alexa.amazon.fr","path":"/api/bootstrap?version=0","method":"GET","timeout":10000,"headers":{}}';
-  if (query == '') query = '{"host":"alexa.amazon.fr","path":"/api/behaviors/preview","method":"POST","timeout":12345,"headers":{}}';
-  if (data == '') data = '{"behaviorId":"PREVIEW","sequenceJson":"{\"@type\":\"com.amazon.alexa.behaviors.model.Sequence\",\"startNode\":{\"@type\":\"com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode\",\"operationPayload\":{\"deviceType\":\"A3S5BH2HU6VAYF\",\"deviceSerialNumber\":\"G090LF118173117U\",\"locale\":\"fr-FR\",\"customerId\":\"A1P3694S7PYD78\",\"value\":50},\"type\":\"Alexa.DeviceControls.Volume\"}}","status":"ENABLED"}';
-  var yourUrl = "http://192.168.0.21:3456/query?query=" + encodeURIComponent(query) + "&data=" + encodeURIComponent(data);
-  var http = new XMLHttpRequest();
-  console.log("adresse:" + yourUrl);
-  http.open('GET', yourUrl, true);
-  http.send();
-}
-
-
-
-$('#bt_cronGenerator').off('click').on('click', function () {
-  jeedom.getCronSelectModal({}, function (result) {
-    $('.configKey[data-l1key=autorefresh]').value(result.value);
-  });
-});
-
 $("#bt_addAction").off('click').on('click', function (event) {
   var _cmd = {
     type: 'action'
@@ -170,63 +105,12 @@ $("#bt_addInfo").off('click').on('click', function (event) {
   };
   addCmdToTable(_cmd);
 });
-$('#bt_addEvent').off('click').on('click', function () {
-  $('#bt_calendartab').trigger('click');
-  $('#md_modal').dialog({
-    title: "{{Ajouter évènement}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=alarm&eqLogic_id=' + $('.eqLogicAttr[data-l1key=id]').value()).dialog('open');
-});
 
-$('#bt_media').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Info Media}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=media&iddevice=' + $('.eqLogicAttr[data-l1key=logicalId]').value()).dialog('open');
-});
-$('#bt_req').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Requêteur JSON}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=req&iddevice=' + $('.eqLogicAttr[data-l1key=logicalId]').value()).dialog('open');
-});
-$('#bt_req2').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Requêteur}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=req2&iddevice=' + $('.eqLogicAttr[data-l1key=logicalId]').value()).dialog('open');
-});
 $('#bt_sante').off('click').on('click', function () {
   $('#md_modal').dialog({
     title: "{{Liste Amazon Fire TV}}"
   });
   $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=health').dialog('open');
-});
-
-$('#bt_reminders').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Rappels/Alarmes}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=reminders').dialog('open');
-});
-
-$('#bt_history').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Historique}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=history').dialog('open');
-});
-
-$('#bt_routines').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Routines}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=routines').dialog('open');
-});
-
-
-$('#bt_scan').off('click').on('click', function () {
-  scanAmazonAlexa();
 });
 
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').on('change', function () {
@@ -249,30 +133,6 @@ $('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').on('change', functi
   }
 });
 
-function scanAmazonAlexa() {
-  $.ajax({
-    type: "POST",
-    url: "plugins/alexafiretv/core/ajax/alexafiretv.ajax.php",
-    data: {
-      action: "scanAmazonAlexa",
-    },
-    dataType: 'json',
-    error: function (request, status, error) {
-      handleAjaxError(request, status, error);
-    },
-    success: function (data) {
-      if (data.state != 'ok') {
-        $('#div_alert').showAlert({
-          message: data.result,
-          level: 'danger'
-        });
-        return;
-      }
-      window.location.reload();
-    }
-  });
-}
-
 $("#table_cmd").sortable({
   axis: "y",
   cursor: "move",
@@ -281,7 +141,6 @@ $("#table_cmd").sortable({
   tolerance: "intersect",
   forcePlaceholderSize: true
 });
-
 
 function addCmdToTable(_cmd) {
   if (!isset(_cmd))
@@ -367,7 +226,6 @@ function addCmdToTable(_cmd) {
 
     tr += '</td>';
 
-
     tr += '<td>';
     tr += '<input class="cmdAttr form-control type input-sm" data-l1key="type" value="action" disabled />';
     tr += '<div ' + DefinitionDivPourCommandesPredefinies + '>';
@@ -400,9 +258,6 @@ function addCmdToTable(_cmd) {
       tr += '</td>';
       tr += '<td>';
     }
-
-
-
 
     tr += '</td>' +
       '<td>' +
@@ -440,127 +295,4 @@ function addCmdToTable(_cmd) {
       }
     });
   }
-}
-
-jeedom.plugin.getDeamonCookieInfo = function (_params) {
-  var paramsRequired = ['id'];
-  var paramsSpecifics = {
-    global: false,
-  };
-  try {
-    jeedom.private.checkParamsRequired(_params || {}, paramsRequired);
-  } catch (e) {
-    (_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e);
-    return;
-  }
-  var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {});
-  var paramsAJAX = jeedom.private.getParamsAJAX(params);
-  paramsAJAX.url = 'plugins/alexafiretv/core/ajax/alexafiretv.ajax.php';
-  paramsAJAX.data = {
-    action: 'getDeamonCookieInfo',
-    id: _params.id
-  };
-  $.ajax(paramsAJAX);
-};
-
-jeedom.plugin.deamonCookieStart = function (_params) {
-  var paramsRequired = ['id'];
-  var paramsSpecifics = {};
-  try {
-    jeedom.private.checkParamsRequired(_params || {}, paramsRequired);
-  } catch (e) {
-    (_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e);
-    return;
-  }
-  var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {});
-  var paramsAJAX = jeedom.private.getParamsAJAX(params);
-  paramsAJAX.url = 'plugins/alexafiretv/core/ajax/alexafiretv.ajax.php';
-  paramsAJAX.data = {
-    action: 'deamonCookieStart',
-    id: _params.id,
-    debug: _params.debug || 0,
-    forceRestart: _params.forceRestart || 0
-  };
-  $.ajax(paramsAJAX);
-};
-
-jeedom.plugin.deamonCookieStop = function (_params) {
-  var paramsRequired = ['id'];
-  var paramsSpecifics = {};
-  try {
-    jeedom.private.checkParamsRequired(_params || {}, paramsRequired);
-  } catch (e) {
-    (_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e);
-    return;
-  }
-  var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {});
-  var paramsAJAX = jeedom.private.getParamsAJAX(params);
-  paramsAJAX.url = 'plugins/alexafiretv/core/ajax/alexafiretv.ajax.php';
-  paramsAJAX.data = {
-    action: 'deamonCookieStop',
-    id: _params.id
-  };
-  $.ajax(paramsAJAX);
-};
-
-
-
-jeedom.plugin.VerifiePresenceCookie = function (_params) {
-  var paramsRequired = ['id'];
-  var paramsSpecifics = {};
-  try {
-    jeedom.private.checkParamsRequired(_params || {}, paramsRequired);
-  } catch (e) {
-    (_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e);
-    return;
-  }
-  var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {});
-  var paramsAJAX = jeedom.private.getParamsAJAX(params);
-  paramsAJAX.url = 'plugins/alexafiretv/core/ajax/alexafiretv.ajax.php';
-  paramsAJAX.data = {
-    action: 'VerifiePresenceCookie',
-    id: _params.id
-  };
-  $.ajax(paramsAJAX);
-};
-
-/*************************Node************************************************/
-
-jeedom.plugin.node = function () {};
-
-jeedom.plugin.node.action = function (_params) { //Delete reminder
-  var paramsRequired = ['action', 'node_id'];
-  var paramsSpecifics = {};
-  try {
-    jeedom.private.checkParamsRequired(_params || {}, paramsRequired);
-  } catch (e) {
-    (_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e);
-    return;
-  }
-
-  var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {});
-  var paramsAJAX = jeedom.private.getParamsAJAX(params);
-  paramsAJAX.url = 'plugins/alexafiretv/desktop/php/alexafiretvProxy.php';
-  paramsAJAX.data = {
-    request: _params.action + 'reminder?id=' + _params.node_id + '&type=action&action=' + _params.action,
-  };
-  $.ajax(paramsAJAX);
-}
-
-jeedom.plugin.node.action2 = function (_params) { //Lancement d'une routine
-  var paramsRequired = ['action', 'node_id', 'node_id2'];
-  var paramsSpecifics = {};
-  try {
-    jeedom.private.checkParamsRequired(_params || {}, paramsRequired);
-  } catch (e) {
-    (_params.error || paramsSpecifics.error || jeedom.private.default_params.error)(e);
-    return;
-  }
-  var params = $.extend({}, jeedom.private.default_params, paramsSpecifics, _params || {});
-  var paramsAJAX = jeedom.private.getParamsAJAX(params);
-  paramsAJAX.url = 'plugins/alexafiretv/desktop/php/alexafiretvProxy.php';
-  paramsAJAX.data = {
-    request: 'routine?device=' + _params.node_id2 + '&routine=' + _params.node_id,
-  };
-  $.ajax(paramsAJAX);
 }
