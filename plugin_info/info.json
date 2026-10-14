@@ -1,5 +1,6 @@
 {
 	"id" : "alexafiretv",
+	"market_state": "ok",
 	"name" : "Alexa - Fire TV",
 	"description" : "Plugin pour interface Fire TV",
 	"licence" : "AGPL",
