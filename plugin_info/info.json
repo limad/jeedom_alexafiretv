@@ -3,7 +3,7 @@
 	"name" : "Alexa - Fire TV",
 	"description" : "Plugin pour interface Fire TV",
 	"licence" : "AGPL",
-	"author" : "Sigalou",
+	"author" : "Limad44",
 	"require" : "3.3.24",
 	"version": "0.0.1",
 	"changelog" : "http://jeedom.sigalou-domotique.fr/alexa-api-changelog",

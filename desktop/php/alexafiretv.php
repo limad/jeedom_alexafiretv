@@ -91,7 +91,6 @@ var str=data.logicalId
 			<span>{{Santé}}</span>
 		</div>
 
-
     </div>
     <!-- Début de la liste des objets -->
 
@@ -141,7 +140,6 @@ $interval = $datetimecreation->diff($datetimeaujourdhui);
 				echo '<span class="badge-alexaapi badge-success">Nouveau</span>';
 			}
 		}
-		
 
 		$alternateImg = $eqLogic->getConfiguration('type');
 		if (file_exists(dirname(__FILE__).'/../../../alexaapi/core/config/devices/'.$alternateImg.'.png'))
@@ -164,8 +162,6 @@ $interval = $datetimecreation->diff($datetimeaujourdhui);
 		</div>
     </div>
 
-	
-	
   </div>
   <!-- Container du panneau de contrôle -->
   <div class="col-lg-12 eqLogic" style="display: none;">
@@ -254,21 +250,6 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
             </form>
           </div>
 		  
-<!--		  
-<div class="cursor" id="bt_media" data-l1key="logicalId" style="background-color : #ffffff; height : 120px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >
-	<center>
-	<i class="fa loisir-musical7" style="font-size : 6em;color:#767676;"></i>
-	</center>
-<span style="font-size : 1.1em;position:relative; top : 25px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#767676"><center>{{Info Média}}</center></span>
-</div>
-	 	Castré par Nebz et HadesDT   
-<div class="cursor" id="bt_test" data-l1key="logicalId" style="background-color : #ffffff; height : 120px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >
-<center>
-<i class="fa loisir-musical7" style="font-size : 6em;color:#767676;"></i>
-</center>
-<span style="font-size : 1.1em;position:relative; top : 25px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#767676"><center>{{Test}}</center></span>
-</div>
--->
 <?php
 
 	//if ($eqLogic->getConfiguration('devicetype')!="Smarthome")
@@ -317,7 +298,6 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
       </div>
 
       <div role="tabpanel" class="tab-pane" id="commandtab">
-        
 
         <table id="table_cmd" class="table table-bordered table-condensed">
           <thead>
@@ -356,11 +336,6 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 ?>		
       </div>
 
-
-
-
-
-
     </div>
   </div>
 </div>
@@ -368,23 +343,3 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 <?php include_file('desktop', 'alexafiretv', 'js', 'alexafiretv'); ?>
 <?php include_file('desktop', 'alexaapi', 'css', 'alexaapi'); ?>
 <?php include_file('core', 'plugin.template', 'js'); ?>
-<script>
-$('#in_searchEqlogic').off('keyup').keyup(function () {
-  var search = $(this).value().toLowerCase();
-  search = search.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-  if(search == ''){
-    $('.eqLogicDisplayCard.prem').show();
-    $('.eqLogicThumbnailContainer.prem').packery();
-    return;
-  }
-  $('.eqLogicDisplayCard.prem').hide();
-  $('.eqLogicDisplayCard.prem .name').each(function(){
-    var text = $(this).text().toLowerCase();
-    text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-    if(text.indexOf(search) >= 0){
-      $(this).closest('.eqLogicDisplayCard.prem').show();
-    }
-  });
-  $('.eqLogicThumbnailContainer.prem').packery();
-});
-</script>

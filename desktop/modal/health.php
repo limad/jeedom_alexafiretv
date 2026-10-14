@@ -18,39 +18,6 @@
 if (!isConnect('admin')) {
 	throw new Exception('401 Unauthorized');
 }
-/*
-	DEPLACE DANS 	public static function ScanAmazonAlexa($_logical_id = null, $_exclusion = 0) de core class alexafiretv.class.php
-
-$json=file_get_contents("http://192.168.0.21:3456/devices");
-$json = json_decode($json,true);
-
-foreach($json as $item)
-	{
-
-
-
-						$device = $item['name'];
-						$serial = $item['serial'];
-						$type = $item['type'];
-						$online = $item['online'];
-
-
-		$alexafiretv = alexafiretv::byLogicalId($serial, 'alexafiretv');
-		if (!is_object($alexafiretv)) {
-			$alexafiretv = new alexafiretv();
-			$alexafiretv->setName($device);
-			$alexafiretv->setLogicalId($serial); 
-			$alexafiretv->setEqType_name('alexafiretv');
-			$alexafiretv->setIsEnable(1);
-			$alexafiretv->setIsVisible(1);
-		}
-		$alexafiretv->setConfiguration('serial',$serial); 
-		$alexafiretv->setConfiguration('device',$device);
-		$alexafiretv->setConfiguration('type',$type);
-		$alexafiretv->setStatus('online',$online);
-		$alexafiretv->save();
- }
-*/
 
 $eqLogics = alexafiretv::byType('alexafiretv');
 ?>
