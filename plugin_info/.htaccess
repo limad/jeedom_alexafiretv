@@ -1,0 +1,6 @@
+# "Require all denied" (mod_authz_core) et non "Order allow,deny" : le .htaccess racine
+# de Jeedom autorise globalement *.php, la syntaxe legacy perd cette fusion.
+# Scopé aux .php : ha_control_icon.png doit rester servie en direct.
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
