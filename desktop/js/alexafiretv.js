@@ -21,18 +21,12 @@ $('#bt_forcerDefaultCmd').off('click').on('click', function () {
   dialog_title = '{{Recharger la configuration par défaut ?}}';
   dialog_message += '<label class="lbl lbl-warning" for="name">{{Notez que cette fonction ne supprime pas votre équipement ni ses commandes, cela évite d\'avoir à refaire les scénarios. Elle va supprimer toute personnalisation et toutes les commandes vont revenir à leur état initial.}}</label> ';
   dialog_message += '</form>';
-  bootbox.dialog({
+  jeeDialog.confirm({
     title: dialog_title,
     message: dialog_message,
-    buttons: {
-      "{{Annuler}}": {
-        className: "btn-danger",
-        callback: function () {}
-      },
-      success: {
-        label: "{{Démarrer}}",
-        className: "btn-success",
-        callback: function () {
+    buttons: { confirm: { label: '{{Démarrer}}' } }
+  }, function (result) {
+          if (!result) return;
           $.ajax({
             type: "POST",
             url: "plugins/alexafiretv/core/ajax/alexafiretv.ajax.php",
@@ -61,10 +55,6 @@ $('#bt_forcerDefaultCmd').off('click').on('click', function () {
               $('.eqLogicDisplayCard[data-eqLogic_id=' + $('.eqLogicAttr[data-l1key=id]').value() + ']').click();
             }
           });
-
-        }
-      },
-    }
   });
 
 });
