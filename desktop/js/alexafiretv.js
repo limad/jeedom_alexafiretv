@@ -15,122 +15,125 @@
 
 */
 
-$('#bt_forcerDefaultCmd').off('click').on('click', function () {
-  var dialog_title = '{{Recharge configuration par défaut}}';
-  var dialog_message = '<form class="form-horizontal onsubmit="return false;"> ';
-  dialog_title = '{{Recharger la configuration par défaut ?}}';
-  dialog_message += '<label class="lbl lbl-warning" for="name">{{Notez que cette fonction ne supprime pas votre équipement ni ses commandes, cela évite d\'avoir à refaire les scénarios. Elle va supprimer toute personnalisation et toutes les commandes vont revenir à leur état initial.}}</label> ';
-  dialog_message += '</form>';
-  jeeDialog.confirm({
-    title: dialog_title,
-    message: dialog_message,
-    buttons: { confirm: { label: '{{Démarrer}}' } }
-  }, function (result) {
-          if (!result) return;
-          $.ajax({
-            type: "POST",
-            url: "plugins/alexafiretv/core/ajax/alexafiretv.ajax.php",
-            data: {
-              action: "forcerDefaultCmd",
-              id: $('.eqLogicAttr[data-l1key=id]').value(),
-              createcommand: 0,
-            },
-            dataType: 'json',
-            global: false,
-            error: function (request, status, error) {
-              handleAjaxError(request, status, error);
-            },
-            success: function (data) {
-              if (data.state != 'ok') {
-                $('#div_alert').showAlert({
-                  message: data.result,
-                  level: 'danger'
-                });
-                return;
-              }
-              $('#div_alert').showAlert({
-                message: '{{Opération réalisée avec succès}}',
-                level: 'success'
-              });
-              $('.eqLogicDisplayCard[data-eqLogic_id=' + $('.eqLogicAttr[data-l1key=id]').value() + ']').click();
-            }
-          });
-  });
+/* Vanilla JS (la box tourne en core::jqueryless : ni jQuery ni bootbox). */
 
-});
+function appendCmdRow(html) {
+  var tbody = document.querySelector('#table_cmd tbody');
+  if (!tbody) return null;
+  var tmp = document.createElement('tbody');
+  tmp.innerHTML = html;
+  var row = tmp.firstElementChild;
+  tbody.appendChild(row);
+  return row;
+}
 
-$('#in_searchEqlogic2').off('keyup').keyup(function () {
-  var search = $(this).value().toLowerCase();
-  search = search.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-  if (search == '') {
-    $('.eqLogicDisplayCard.second').show();
-    $('.eqLogicThumbnailContainer.second').packery();
+document.addEventListener('click', function (event) {
+  if (event.target.closest('#bt_forcerDefaultCmd')) {
+    jeeDialog.confirm({
+      title: '{{Recharger la configuration par défaut ?}}',
+      message: '<label class="lbl lbl-warning">{{Notez que cette fonction ne supprime pas votre équipement ni ses commandes, cela évite d\'avoir à refaire les scénarios. Elle va supprimer toute personnalisation et toutes les commandes vont revenir à leur état initial.}}</label>',
+      buttons: { confirm: { label: '{{Démarrer}}' } }
+    }, function (result) {
+      if (!result) return;
+      var eqId = document.querySelector('.eqLogicAttr[data-l1key=id]').jeeValue();
+      domUtils.ajax({
+        type: "POST",
+        url: "plugins/alexafiretv/core/ajax/alexafiretv.ajax.php",
+        data: {
+          action: "forcerDefaultCmd",
+          id: eqId,
+          createcommand: 0,
+        },
+        dataType: 'json',
+        global: false,
+        error: function (request, status, error) {
+          handleAjaxError(request, status, error);
+        },
+        success: function (data) {
+          if (data.state != 'ok') {
+            jeedomUtils.showAlert({message: data.result, level: 'danger'});
+            return;
+          }
+          jeedomUtils.showAlert({message: '{{Opération réalisée avec succès}}', level: 'success'});
+          document.querySelector('.eqLogicDisplayCard[data-eqLogic_id="' + eqId + '"]')?.click();
+        }
+      });
+    });
     return;
   }
-  $('.eqLogicDisplayCard.second').hide();
-  $('.eqLogicDisplayCard.second .name').each(function () {
-    var text = $(this).text().toLowerCase();
-    text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-    if (text.indexOf(search) >= 0) {
-      $(this).closest('.eqLogicDisplayCard.second').show();
+
+  if (event.target.closest('#bt_resetEqlogicSearch2')) {
+    var input = document.getElementById('in_searchEqlogic2');
+    if (input) {
+      input.value = '';
+      input.dispatchEvent(new Event('keyup', {bubbles: true}));
     }
+    return;
+  }
+
+  if (event.target.closest('#bt_addAction')) {
+    addCmdToTable({type: 'action'});
+    return;
+  }
+
+  if (event.target.closest('#bt_addInfo')) {
+    addCmdToTable({type: 'info', subType: 'string'});
+    return;
+  }
+
+  if (event.target.closest('#bt_sante')) {
+    jeeDialog.dialog({
+      title: "{{Liste Amazon Fire TV}}",
+      contentUrl: 'index.php?v=d&plugin=alexafiretv&modal=health'
+    });
+  }
+});
+
+document.addEventListener('keyup', function (event) {
+  var input = event.target.closest('#in_searchEqlogic2');
+  if (!input) return;
+  var search = input.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+  document.querySelectorAll('.eqLogicDisplayCard.second').forEach(function (card) {
+    if (search == '') {
+      card.style.display = '';
+      return;
+    }
+    var nameEl = card.querySelector('.name');
+    var text = (nameEl ? nameEl.textContent : '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    card.style.display = text.indexOf(search) >= 0 ? '' : 'none';
   });
-  $('.eqLogicThumbnailContainer.second').packery();
-});
-$('#bt_resetEqlogicSearch2').on('click', function () {
-  $('#in_searchEqlogic2').val('')
-  $('#in_searchEqlogic2').keyup()
-})
-
-$("#bt_addAction").off('click').on('click', function (event) {
-  var _cmd = {
-    type: 'action'
-  };
-  addCmdToTable(_cmd);
-});
-$("#bt_addInfo").off('click').on('click', function (event) {
-  var _cmd = {
-    type: 'info',
-    subType: 'string'
-  };
-  addCmdToTable(_cmd);
 });
 
-$('#bt_sante').off('click').on('click', function () {
-  $('#md_modal').dialog({
-    title: "{{Liste Amazon Fire TV}}"
-  });
-  $('#md_modal').load('index.php?v=d&plugin=alexafiretv&modal=health').dialog('open');
-});
-
-$('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').on('change', function () {
+document.addEventListener('change', function (event) {
+  if (!event.target.closest('.eqLogicAttr[data-l1key=configuration][data-l2key=type]')) return;
   // Ici il faudra faire comme dans desktop/php/alexafiretv.php ligne 268 chercher type et à défaut family
-  $icon = $('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').value();
-  if ($icon != '' && $icon != null)
-    $('#img_device').attr("src", 'plugins/alexaapi/core/config/devices/' + $icon + '.png');
+  var icon = document.querySelector('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').jeeValue();
+  if (icon != '' && icon != null) {
+    document.getElementById('img_device')?.setAttribute('src', 'plugins/alexaapi/core/config/devices/' + icon + '.png');
+  }
 
-  var id = $('.eqLogicAttr[data-l1key=id]')[0].value;
+  var id = document.querySelector('.eqLogicAttr[data-l1key=id]').value;
   if (id) {
     jeedom.eqLogic.byId({
-      "id": $('.eqLogicAttr[data-l1key=id]')[0].value,
+      id: id,
       noCache: true,
       success: function (obj) {
-        if (obj && obj.configuration && obj.configuration.capabilities && obj.configuration.capabilities.length && obj.configuration.capabilities instanceof Array) {
-          $('.eqLogicAttr[data-l1key=configuration][data-l2key=capabilities]')[0].innerHTML = obj.configuration.capabilities.join(', ');
+        if (obj && obj.configuration && obj.configuration.capabilities && obj.configuration.capabilities instanceof Array && obj.configuration.capabilities.length) {
+          var caps = document.querySelector('.eqLogicAttr[data-l1key=configuration][data-l2key=capabilities]');
+          if (caps) caps.innerHTML = obj.configuration.capabilities.join(', ');
         }
       }
     });
   }
 });
 
-$("#table_cmd").sortable({
-  axis: "y",
-  cursor: "move",
-  items: ".cmd",
-  placeholder: "ui-state-highlight",
-  tolerance: "intersect",
-  forcePlaceholderSize: true
-});
+(function () {
+  var tbody = document.querySelector('#table_cmd tbody');
+  if (tbody && typeof Sortable !== 'undefined' && !tbody.dataset.sortableInit) {
+    tbody.dataset.sortableInit = '1';
+    new Sortable(tbody, {draggable: '.cmd', direction: 'vertical'});
+  }
+})();
 
 function addCmdToTable(_cmd) {
   if (!isset(_cmd))
@@ -194,8 +197,8 @@ function addCmdToTable(_cmd) {
       '</td>' +
       '</tr>';
 
-    $('#table_cmd tbody').append(tr);
-    $('#table_cmd tbody tr:last').setValues(_cmd, '.cmdAttr');
+    var row = appendCmdRow(tr);
+    if (row) row.setJeeValues(_cmd, '.cmdAttr');
   }
 
   if (init(_cmd.type) == 'action') {
@@ -265,23 +268,24 @@ function addCmdToTable(_cmd) {
       '  </td>' +
       '</tr>';
 
-    $('#table_cmd tbody').append(tr);
-    var tr = $('#table_cmd tbody tr:last');
-    jeedom.eqLogic.builSelectCmd({
-      id: $(".li_eqLogic.active").attr('data-eqLogic_id'),
+    var row = appendCmdRow(tr);
+    if (!row) return;
+    var active = document.querySelector('.li_eqLogic.active');
+    jeedom.eqLogic.buildSelectCmd({
+      id: active ? active.getAttribute('data-eqLogic_id') : null,
       filter: {
         type: 'i'
       },
       error: function (error) {
-        $('#div_alert').showAlert({
+        jeedomUtils.showAlert({
           message: error.message,
           level: 'danger'
         });
       },
       success: function (result) {
-        tr.find('.cmdAttr[data-l1key=value]').append(result);
-        tr.setValues(_cmd, '.cmdAttr');
-        jeedom.cmd.changeType(tr, init(_cmd.subType));
+        row.querySelector('.cmdAttr[data-l1key=value]')?.insertAdjacentHTML('beforeend', result);
+        row.setJeeValues(_cmd, '.cmdAttr');
+        jeedom.cmd.changeType(row, init(_cmd.subType));
       }
     });
   }
