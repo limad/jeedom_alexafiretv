@@ -31,6 +31,13 @@ try {
             alexafiretv::forcerDefaultCmd(init('id'));
             ajax::success();
             break;
+        case 'resetIsoTemplates':
+            $eqLogic = alexafiretv::byId(init('id'));
+            if (!is_object($eqLogic)) {
+                throw new \Exception(__('Equipement introuvable : ', __FILE__) . init('id'));
+            }
+            ajax::success($eqLogic->resetIsoTemplates());
+            break;
     }
     throw new \Exception('Aucune methode correspondante');
 } catch (\Exception $e) {

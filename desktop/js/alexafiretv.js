@@ -62,6 +62,39 @@ document.addEventListener('click', function (event) {
     return;
   }
 
+  if (event.target.closest('#bt_alexafiretvForcerDefault')) {
+    var eqId = document.querySelector('.eqLogicAttr[data-l1key="id"]')?.jeeValue() || document.querySelector('.eqLogicAttr[data-l1key="id"]')?.value;
+    if (!eqId) return;
+    jeeDialog.confirm({
+      title: '{{Réinitialiser les widgets}}',
+      message: '{{Voulez-vous réinitialiser les widgets et retours à la ligne par défaut sur toutes les commandes de cet équipement ?}}',
+      callback: function (result) {
+        if (!result) return;
+        domUtils.ajax({
+          type: 'POST',
+          url: 'plugins/alexafiretv/core/ajax/alexafiretv.ajax.php',
+          data: {
+            action: 'resetIsoTemplates',
+            id: eqId
+          },
+          dataType: 'json',
+          error: function (request, status, error) {
+            handleAjaxError(request, status, error);
+          },
+          success: function (data) {
+            if (data.state != 'ok') {
+              jeedomUtils.showAlert({ message: data.result, level: 'danger' });
+              return;
+            }
+            if (typeof toastr !== 'undefined') toastr.success('{{Widgets ISO réinitialisés avec succès}}');
+            window.location.reload();
+          }
+        });
+      }
+    });
+    return;
+  }
+
   if (event.target.closest('#bt_resetEqlogicSearch2')) {
     var input = document.getElementById('in_searchEqlogic2');
     if (input) {
