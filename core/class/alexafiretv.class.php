@@ -218,6 +218,7 @@ class alexafiretv extends eqLogic
             $cmd->setOrder("2");
 			$cmd->setConfiguration('request', $_shellExecDefault);
 			$cmd->setDisplay('title_disable', 0);
+			self::applyIsoTemplate($cmd, 'info', $SubType);
 			$cmd->save(); // déplacé le 19/09/2020
 		}
 	$shellExec = $cmd->getConfiguration('request', $_shellExecDefault);
@@ -240,8 +241,11 @@ class alexafiretv extends eqLogic
             try {
                 $cmd = $this->getCmd(null, $LogicalId);
                 if ((!is_object($cmd)) || $forceUpdate) {
-					
-                    if (!is_object($cmd)) $cmd = new alexafiretvCmd();
+                    $isNew = false;
+                    if (!is_object($cmd)) {
+                        $cmd = new alexafiretvCmd();
+                        $isNew = true;
+                    }
                     $cmd->setType($Type);
                     $cmd->setLogicalId($LogicalId);
                     $cmd->setSubType($SubType);
@@ -252,6 +256,9 @@ class alexafiretv extends eqLogic
                     if (!empty($setTemplate_lien)) {
                         $cmd->setTemplate("dashboard", $setTemplate_lien);
                         $cmd->setTemplate("mobile", $setTemplate_lien);
+                    }
+                    if ($isNew) {
+                        self::applyIsoTemplate($cmd, $Type, $SubType);
                     }
                     if (!empty($setDisplayicon)) $cmd->setDisplay('icon', '<i class="' . $setDisplayicon . '"></i>');
                     if (!empty($request)) $cmd->setConfiguration('request', $request);
@@ -345,6 +352,7 @@ class alexafiretv extends eqLogic
                     $cmd->setType('action');
                     $cmd->setSubType('other');
                     $cmd->setEqLogic_id($this->getId());
+                    self::applyIsoTemplate($cmd, 'action', 'other');
                     $cmd->save();	
 				}					
 
@@ -411,6 +419,46 @@ class alexafiretv extends eqLogic
         }
         return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, $typeWidget, 'alexafiretv')));
     }
+
+	public static function defaultTemplate(string $type, string $subType): string
+	{
+		if ($type === 'info') {
+			return 'customtemp::iso_line';
+		}
+		if ($type === 'action') {
+			switch ($subType) {
+				case 'slider':
+					return 'customtemp::iso_slider';
+				case 'select':
+					return 'customtemp::iso_select';
+				case 'color':
+					return 'customtemp::iso_picker';
+				case 'message':
+					return 'customtemp::iso_msg';
+				default:
+					return 'customtemp::iso_btn';
+			}
+		}
+		return 'customtemp::iso_line';
+	}
+
+	public static function applyIsoTemplate(cmd $cmd, string $type, string $subType): void
+	{
+		$cmd->setTemplate('dashboard', self::defaultTemplate($type, $subType));
+		$cmd->setDisplay('forceReturnLineBefore', 1);
+		$cmd->setDisplay('forceReturnLineAfter', 1);
+	}
+
+	public function resetIsoTemplates(): int
+	{
+		$count = 0;
+		foreach ($this->getCmd() as $cmd) {
+			self::applyIsoTemplate($cmd, (string)$cmd->getType(), (string)$cmd->getSubType());
+			$cmd->save();
+			$count++;
+		}
+		return $count;
+	}
 }
 
 class alexafiretvCmd extends cmd

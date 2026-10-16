@@ -171,6 +171,7 @@ $interval = $datetimecreation->diff($datetimeaujourdhui);
     <a class="btn btn-danger eqLogicAction pull-right" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}</a>
      <!-- Bouton configuration par défaut -->
 	<a id="bt_forcerDefaultCmd" class="btn btn-warning pull-right"><i class="fas fa-search"></i> {{Recharger configuration par défaut}}</a>
+	<a class="btn btn-sm btn-warning pull-right" id="bt_alexafiretvForcerDefault"><i class="fas fa-magic"></i> {{Défaut config}}</a>
     <!-- Bouton configuration avancée -->
     <a class="btn btn-default eqLogicAction pull-right" data-action="configure"><i class="fas fa-cogs"></i> {{Configuration avancée}}</a>
    <!-- Liste des onglets -->
