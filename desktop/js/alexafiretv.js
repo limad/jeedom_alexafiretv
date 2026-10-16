@@ -338,3 +338,40 @@ function addCmdToTable(_cmd) {
     });
   }
 }
+
+function printEqLogic(data) {
+  var membersEl = document.getElementById('multiroom-members');
+  if (!membersEl) return;
+  membersEl.innerHTML = '';
+
+  if (!data || !data.configuration || !data.configuration.members || data.configuration.members.length === 0) {
+    if (membersEl.parentElement) membersEl.parentElement.style.display = 'none';
+    return;
+  }
+
+  var mapEl = document.getElementById('alexafiretv-logical-map');
+  var map = mapEl ? JSON.parse(mapEl.textContent || '{}') : (typeof logicalIdToHumanReadable !== 'undefined' ? logicalIdToHumanReadable : {});
+
+  var ul = document.createElement('ul');
+  ul.style.listStyleType = 'none';
+
+  data.configuration.members.forEach(function (member) {
+    var logicalId = member + '_player';
+    var li = document.createElement('li');
+    li.style.marginTop = '5px';
+    if (logicalId in map) {
+      li.textContent = map[logicalId];
+    } else {
+      var span = document.createElement('span');
+      span.className = 'label label-default';
+      span.style.textShadow = 'none';
+      span.innerHTML = '<i>(Non configuré)</i>';
+      li.appendChild(span);
+      li.appendChild(document.createTextNode(' ' + logicalId));
+    }
+    ul.appendChild(li);
+  });
+
+  if (membersEl.parentElement) membersEl.parentElement.style.display = '';
+  membersEl.appendChild(ul);
+}
