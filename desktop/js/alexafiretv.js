@@ -137,12 +137,27 @@ document.addEventListener('keyup', function (event) {
   });
 });
 
+if (!window.__alexafiretvImgFallbackBound) {
+  window.__alexafiretvImgFallbackBound = true;
+  document.addEventListener('error', function (e) {
+    var el = e.target;
+    if (el && el.tagName === 'IMG' && el.dataset.fallbackSrc && !el.dataset.fallbackApplied) {
+      el.dataset.fallbackApplied = '1';
+      el.src = el.dataset.fallbackSrc;
+    }
+  }, true);
+}
+
 document.addEventListener('change', function (event) {
   if (!event.target.closest('.eqLogicAttr[data-l1key=configuration][data-l2key=type]')) return;
   // Ici il faudra faire comme dans desktop/php/alexafiretv.php ligne 268 chercher type et à défaut family
   var icon = document.querySelector('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').jeeValue();
   if (icon != '' && icon != null) {
-    document.getElementById('img_device')?.setAttribute('src', 'plugins/alexaapi/core/config/devices/' + icon + '.png');
+    var imgDev = document.getElementById('img_device');
+    if (imgDev) {
+      delete imgDev.dataset.fallbackApplied;
+      imgDev.setAttribute('src', 'plugins/alexaapi/core/config/devices/' + icon + '.png');
+    }
   }
 
   var id = document.querySelector('.eqLogicAttr[data-l1key=id]').value;

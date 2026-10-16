@@ -286,7 +286,7 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                   <div class="col-sm-10">
                     <center>
 					
-                      <img src="core/img/no_image.gif" data-original=".jpg" id="img_device" class="img-responsive" style="max-height : 250px;"  onerror="this.src='plugins/alexaapi/core/config/devices/default.png'"/>
+                      <img src="core/img/no_image.gif" data-original=".jpg" id="img_device" class="img-responsive" style="max-height : 250px;" data-fallback-src="plugins/alexaapi/core/config/devices/default.png"/>
                     </center>
                   </div>
                 </div>
