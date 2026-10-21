@@ -1,0 +1,45 @@
+name: translate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - alpha
+    paths:
+      - '**/*.php'
+      - '**/*.js'
+      - 'core/i18n/fr_FR.json'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  auto-translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Mips2648/plugins-translations@v5
+        with:
+          source_language: fr_FR
+          target_languages: en_US,es_ES,de_DE,it_IT,pt_PT
+          deepl_api_key: ${{ secrets.DEEPL_API_KEY }}
+          use_core_translations: true
+
+      - name: Auto-merge translation PR
+        run: |
+          for i in {1..5}; do
+            PR_URL=$(gh pr list --head translations --base alpha --state open --json url --jq '.[0].url')
+            [ -n "$PR_URL" ] && break
+            sleep 2
+          done
+          if [ -n "$PR_URL" ]; then
+            echo "Fusion automatique de la PR : $PR_URL"
+            gh pr merge "$PR_URL" --merge --delete-branch
+          else
+            echo "Aucune PR de traduction ouverte à fusionner."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
