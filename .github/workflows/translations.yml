@@ -31,13 +31,13 @@ jobs:
       - name: Auto-merge translation PR
         run: |
           for i in {1..5}; do
-            PR_URL=$(gh pr list --head translations --base alpha --state open --json url --jq '.[0].url')
+            PR_URL=$(gh pr list --repo ${{ github.repository }} --head translations --base alpha --state open --json url --jq '.[0].url')
             [ -n "$PR_URL" ] && break
             sleep 2
           done
           if [ -n "$PR_URL" ]; then
             echo "Fusion automatique de la PR : $PR_URL"
-            gh pr merge "$PR_URL" --merge --delete-branch
+            gh pr merge "$PR_URL" --repo ${{ github.repository }} --merge --delete-branch
           else
             echo "Aucune PR de traduction ouverte à fusionner."
           fi
