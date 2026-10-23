@@ -137,12 +137,27 @@ document.addEventListener('keyup', function (event) {
   });
 });
 
+if (!window.__alexafiretvImgFallbackBound) {
+  window.__alexafiretvImgFallbackBound = true;
+  document.addEventListener('error', function (e) {
+    var el = e.target;
+    if (el && el.tagName === 'IMG' && el.dataset.fallbackSrc && !el.dataset.fallbackApplied) {
+      el.dataset.fallbackApplied = '1';
+      el.src = el.dataset.fallbackSrc;
+    }
+  }, true);
+}
+
 document.addEventListener('change', function (event) {
   if (!event.target.closest('.eqLogicAttr[data-l1key=configuration][data-l2key=type]')) return;
   // Ici il faudra faire comme dans desktop/php/alexafiretv.php ligne 268 chercher type et à défaut family
   var icon = document.querySelector('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').jeeValue();
   if (icon != '' && icon != null) {
-    document.getElementById('img_device')?.setAttribute('src', 'plugins/alexaapi/core/config/devices/' + icon + '.png');
+    var imgDev = document.getElementById('img_device');
+    if (imgDev) {
+      delete imgDev.dataset.fallbackApplied;
+      imgDev.setAttribute('src', 'plugins/alexaapi/core/config/devices/' + icon + '.png');
+    }
   }
 
   var id = document.querySelector('.eqLogicAttr[data-l1key=id]').value;
@@ -322,4 +337,41 @@ function addCmdToTable(_cmd) {
       }
     });
   }
+}
+
+function printEqLogic(data) {
+  var membersEl = document.getElementById('multiroom-members');
+  if (!membersEl) return;
+  membersEl.innerHTML = '';
+
+  if (!data || !data.configuration || !data.configuration.members || data.configuration.members.length === 0) {
+    if (membersEl.parentElement) membersEl.parentElement.style.display = 'none';
+    return;
+  }
+
+  var mapEl = document.getElementById('alexafiretv-logical-map');
+  var map = mapEl ? JSON.parse(mapEl.textContent || '{}') : (typeof logicalIdToHumanReadable !== 'undefined' ? logicalIdToHumanReadable : {});
+
+  var ul = document.createElement('ul');
+  ul.style.listStyleType = 'none';
+
+  data.configuration.members.forEach(function (member) {
+    var logicalId = member + '_player';
+    var li = document.createElement('li');
+    li.style.marginTop = '5px';
+    if (logicalId in map) {
+      li.textContent = map[logicalId];
+    } else {
+      var span = document.createElement('span');
+      span.className = 'label label-default';
+      span.style.textShadow = 'none';
+      span.innerHTML = '<i>(Non configuré)</i>';
+      li.appendChild(span);
+      li.appendChild(document.createTextNode(' ' + logicalId));
+    }
+    ul.appendChild(li);
+  });
+
+  if (membersEl.parentElement) membersEl.parentElement.style.display = '';
+  membersEl.appendChild(ul);
 }

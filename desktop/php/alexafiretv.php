@@ -18,52 +18,7 @@ foreach ($eqLogics as $eqLogic)
 }
 ?>
 
-<script>
-var logicalIdToHumanReadable = <?php echo json_encode($logicalIdToHumanReadable); ?>
-
-function printEqLogic(data)
-{
-var str=data.logicalId
-
-/* On masque la ligne "Activer le widget Playlist" si c'est pas un player
-  if (str.substring(str.length - 6, str.length) != "player")
-	$('#widgetPlayListEnable').parent().hide();
-	else
-	$('#widgetPlayListEnable').parent().show();
- 
-*/
-  //if (data.configuration.family === undefined)
-  //{
-//	 $('#family').hide(); //ajouté, masque Famille si c'est vide
- // }	
-  
-	// Traitement de Multiroom sur les infos du device
-  $('#multiroom-members').empty();
-  if (data.configuration.members === undefined)
-  {
-     //$('#multiroom-members').append('Configuration incomplete.'); //supprimé
-	 $('#multiroom-members').parent().hide(); //ajouté
-     return;
-  }
-  if (data.configuration.members.length === 0)
-  {
-    $('#multiroom-members').parent().hide();
-    return;
-  }
-  var html = '<ul style="list-style-type: none;">';
-  for (var i in data.configuration.members)
-  {
-    var logicalId = data.configuration.members[i]+"_player";
-    if (logicalId in logicalIdToHumanReadable)
-      html += '<li style="margin-top: 5px;">' + logicalIdToHumanReadable[logicalId] + '</li>';
-    else
-      html += '<li style="margin-top: 5px;"><span class="label label-default" style="text-shadow : none;"><i>(Non configuré)</i></span> ' + logicalId +'</li>';
-  }
-  html += '</ul>';
-  $('#multiroom-members').parent().show();
-  $('#multiroom-members').append(html);
-}
-</script>
+<script id="alexafiretv-logical-map" type="application/json"><?php echo json_encode($logicalIdToHumanReadable, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?></script>
 
 <!-- Container global (Ligne bootstrap) -->
 <div class="row row-overflow">
@@ -286,7 +241,7 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                   <div class="col-sm-10">
                     <center>
 					
-                      <img src="core/img/no_image.gif" data-original=".jpg" id="img_device" class="img-responsive" style="max-height : 250px;"  onerror="this.src='plugins/alexaapi/core/config/devices/default.png'"/>
+                      <img src="core/img/no_image.gif" data-original=".jpg" id="img_device" class="img-responsive" style="max-height : 250px;" data-fallback-src="plugins/alexaapi/core/config/devices/default.png"/>
                     </center>
                   </div>
                 </div>
