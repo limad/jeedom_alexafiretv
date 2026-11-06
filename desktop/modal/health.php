@@ -21,7 +21,8 @@ if (!isConnect('admin')) {
 
 $eqLogics = alexafiretv::byType('alexafiretv');
 ?>
-<table class="table table-condensed tablesorter" id="table_healthNetwork">
+<div id="md_alexafiretvHealth">
+<table class="table table-condensed dataTable" id="table_healthNetwork">
 	<thead>
 		<tr>
 			<th>{{Module}}</th>
@@ -54,3 +55,10 @@ foreach ($eqLogics as $eqLogic) {
 ?>
 	</tbody>
 </table>
+</div>
+<script>
+// Tri natif du core (vanilla DataTable), sans jQuery/tablesorter
+if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initDataTables === 'function') {
+	jeedomUtils.initDataTables('#md_alexafiretvHealth', false, false)
+}
+</script>
