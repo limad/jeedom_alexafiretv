@@ -1,8 +1,10 @@
 {
 	"id": "alexafiretv",
 	"market_state": "ok",
-	"name": "Alexa - Fire TV",
-	"description": "Plugin pour interface Fire TV",
+	"name": "Alexa - Fire TV (obsolète)",
+	"deprecated": true,
+	"replacedBy": "alexaapiv2",
+	"description": "OBSOLÈTE : dépend d'Alexa - API, remplacé par Alexa Premium (alexaapiv2). Plugin pour interface Fire TV",
 	"licence": "AGPL",
 	"author": "Limad44",
 	"require": "3.3.24",
