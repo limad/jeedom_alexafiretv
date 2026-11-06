@@ -18,43 +18,13 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
-/*
- * Plugin obsolète : seules les box qui l'utilisaient déjà peuvent l'activer.
- * Le core lance <id>_install() dans un sous-processus (jeePlugin.php) : une
- * exception levée ici ne bloquerait pas l'activation, on remet donc nous-mêmes
- * le plugin inactif.
- */
-function alexafiretv_isLegacyUser() {
-	if (config::byKey('legacyUser', 'alexafiretv', 0) == 1) {
-		return true;
-	}
-	return count(eqLogic::byType('alexafiretv')) > 0;
-}
-
-function alexafiretv_blockNewActivation() {
-	if (alexafiretv_isLegacyUser()) {
-		config::save('legacyUser', 1, 'alexafiretv');
-		return false;
-	}
-	config::save('active', 0, 'alexafiretv');
-	config::save('dependancyAutoMode', 0, 'alexafiretv');
-	$msg = __('Le plugin Alexa - Fire TV est obsolète et ne peut plus être activé sur une nouvelle installation. Utilisez Alexa Premium (alexaapiv2).', __FILE__);
-	log::add('alexafiretv', 'error', $msg);
-	message::add('alexafiretv', $msg);
-	return true;
-}
-
 function alexafiretv_install()
 {
-	if (alexafiretv_blockNewActivation()) {
-		return;
-	}
     getIsoWidget('alexafiretv');
 }
 
 function alexafiretv_update()
 {
-	config::save('legacyUser', 1, 'alexafiretv');
     message::add('alexafiretv', 'Mise à jour du plugin Fire TV terminée.');
     getIsoWidget('alexafiretv');
 }
