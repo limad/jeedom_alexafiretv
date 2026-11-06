@@ -24,8 +24,8 @@ echo "╠═══> adb start-server"
 echo "╚═════════════════════════════════════════════════════════════════════════════════════"
 
 echo 75 > /tmp/alexafiretv_dep
-$sudoPrefix adb start-server
-$sudoPrefix adb devices
+$sudo_prefix adb start-server
+$sudo_prefix adb devices
 echo 100 > /tmp/alexafiretv_dep
 rm /tmp/alexafiretv_dep
 echo "╔══════════════════════[Installation des dépendances]═══════════════════════════════════════════"

@@ -12,12 +12,7 @@ class alexafiretv extends eqLogic
         $return['log']           = 'alexafiretv_dep';
         $return['progress_file'] = '/tmp/alexafiretv_dep';
         $adb                     = '/usr/bin/adb';
-        if (is_file($adb)) {
-            $return['state'] = 'ok';
-        } else {
-            exec('echo alexafiretv dependency not found : ' . $adb . ' > ' . log::getPathToLog('alexafiretv_log') . ' 2>&1 &');
-            $return['state'] = 'nok';
-        }
+        $return['state'] = is_file($adb) ? 'ok' : 'nok';
         return $return;
     }
 
@@ -73,7 +68,8 @@ class alexafiretv extends eqLogic
 			log::add('alexafiretv', 'warning', "╠═══> Adresse IP invalide dans la configuration de ".$_name);
 			return false;
 		}
-		$commande=self::prefixeRoot() . "adb devices | grep " . escapeshellarg($host) . " | cut -f2 | xargs";
+		// Correspondance exacte "hôte:5555" : un grep sur 192.168.1.1 capterait aussi 192.168.1.10
+		$commande=self::prefixeRoot() . "adb devices | awk -v h=" . escapeshellarg($host . ':5555') . " '\$1==h{print \$2}'";
 	log::add('alexafiretv', 'info', " ╔══════════════════════[Test connexion à ".$_name."]════════════════════════════════════════════════════════════════════════════");
 	log::add('alexafiretv', 'debug', "╠═══> Envoi de ".$commande);
 	$reponse=exec($commande);
@@ -115,18 +111,17 @@ class alexafiretv extends eqLogic
         }
         $reponse=exec(self::prefixeRoot() . "adb connect ".escapeshellarg($host));
 	log::add('alexafiretv', 'debug', "╠═══> Résultat [".$reponse."]");
-		switch (substr(trim($reponse),0,6)) {
-		
-            case 'unable':
-            log::add('alexafiretv', 'info', ' ║ !!!!!! Connexion au périphérique '.$_adresseip.' : Echec '.$reponse.' !!!!!!!');
+		// adb répond "connected to …" / "already connected to …" en cas de succès ;
+		// tout le reste ("failed to connect …", "unable to connect …", vide) est un échec.
+		$reponse = trim((string) $reponse);
+		if (strpos($reponse, 'connected to') === 0 || strpos($reponse, 'already connected') === 0) {
+			log::add('alexafiretv', 'info', ' ╠═══> Succès : Tout va bien, '.$_name.' connecté');
 			log::add('alexafiretv', 'info', " ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
-			return false;
-			
-			default: //donc = device
-            log::add('alexafiretv', 'info', ' ╠═══> Succès : Tout va bien, '.$_name.' connecté');
-			log::add('alexafiretv', 'info', " ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
-			return true;			
+			return true;
 		}
+		log::add('alexafiretv', 'info', ' ║ !!!!!! Connexion au périphérique '.$_adresseip.' : Echec '.$reponse.' !!!!!!!');
+		log::add('alexafiretv', 'info', " ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
+		return false;
     }
 
     public static function cron($_eqlogic_id = null)
@@ -138,8 +133,10 @@ class alexafiretv extends eqLogic
             $plugin = plugin::byId('alexafiretv');
             $eqLogics = eqLogic::byType($plugin->getId());
             foreach ($eqLogics as $eqLogic) {
-                    $eqLogic->refresh();
-
+                if (!$eqLogic->getIsEnable() || trim((string) $eqLogic->getConfiguration('adresseip')) === '') {
+                    continue;
+                }
+                $eqLogic->refresh();
             }
         }
 
@@ -203,6 +200,7 @@ class alexafiretv extends eqLogic
     {
 
 	// Ici on vérifie que la commande info existe sinon on l'ajoute et on rafraichi la valeur
+	$_resultat = '';
 	try {
 	$cmd = $this->getCmd(null, $LogicalId);
 		if (!is_object($cmd)) {
@@ -299,28 +297,9 @@ class alexafiretv extends eqLogic
     {		
 		
         $F = $this->getStatus('forceUpdate'); // forceUpdate permet de recharger les commandes à valeur d'origine, mais sans supprimer/recréer les commandes
-        $capa = $this->getConfiguration('capabilities', '');
-        $type = $this->getConfiguration('type', '');
-        if (!empty($capa)) {
-
-            $widgetEcho = ($this->getConfiguration('devicetype') == "Echo");
-            $widgetPlayer = ($this->getConfiguration('devicetype') == "Player");
-            $widgetSmarthome = ($this->getConfiguration('devicetype') == "Smarthome");
-            $widgetPlaylist = ($this->getConfiguration('devicetype') == "PlayList");
-
-            $cas1 = (($this->hasCapaorFamilyorType("AUDIO_PLAYER")) && $widgetPlayer);
-            $cas1bis = (($this->hasCapaorFamilyorType("AUDIO_PLAYER")) && !$widgetPlayer);
-            $cas2 = (($this->hasCapaorFamilyorType("TIMERS_AND_ALARMS")) && !$widgetPlayer);
-            $cas3 = (($this->hasCapaorFamilyorType("REMINDERS")) && !$widgetPlayer);
-            $cas4 = (($this->hasCapaorFamilyorType("REMINDERS")) && !$widgetSmarthome);
-            $cas5 = (($this->hasCapaorFamilyorType("VOLUME_SETTING")) || ($this->hasCapaorFamilyorType("SOUND_SETTINGS")));
-            $cas6 = ($cas5 && (!$this->hasCapaorFamilyorType("WHA")));
-            $cas7 = ((!$this->hasCapaorFamilyorType("WHA")) && ($this->getConfiguration('devicetype') != "Player") && ((!$this->hasCapaorFamilyorType("FIRE_TV")) || ($this->hasCapaorFamilyorType("A2JKHJ0PX4J3L3"))) && !$widgetSmarthome && (!$this->hasCapaorFamilyorType("AMAZONMOBILEMUSIC_ANDROID")));
-            $cas8 = (($this->hasCapaorFamilyorType("turnOff")) && $widgetSmarthome);
-            $cas9 = ($this->hasCapaorFamilyorType("WHA") && $widgetEcho);
-            $false = false;
-			
-			$cas1 =true;
+        // Les Fire TV sont créés depuis la page du plugin : les commandes ne dépendent plus
+        // des capacités autrefois remplies par l'ancien plugin Alexa-API.
+        $cas1 = true;
             self::updateCmd($F, 'home', 'action', 'other', false, 'Home', true, true, 'fas fa-home', null, null, 'input keyevent 3', null, null, 100, $cas1);            
             self::updateCmd($F, 'menu', 'action', 'other', false, 'Menu', true, true, 'fas fa-bars', null, null, 'input keyevent 1', null, null, 101, $cas1);  			self::updateCmd($F, 'search', 'action', 'other', false, 'Search', true, true, 'fas fa-search', null, null, 'input keyevent 84', null, null, 101, $cas1);            
 			self::updateCmd($F, 'back', 'action', 'other', false, 'Back', true, true, 'fas fa-undo', null, null, 'input keyevent 4', null, null, 102, $cas1); 
@@ -356,10 +335,6 @@ class alexafiretv extends eqLogic
                     $cmd->save();	
 				}					
 
-        } else {
-            log::add('alexafiretv', 'warning', 'Pas de capacité détectée sur ' . $this->getName() . ' , assurez-vous que le démon est OK');
-        }
-
         $this->setStatus('forceUpdate', false); //dans tous les cas, on repasse forceUpdate à false
 
     }
@@ -380,44 +355,6 @@ class alexafiretv extends eqLogic
 
     public function preSave()
     {
-    }
-
-    // https://github.com/NextDom/NextDom/wiki/Ajout-d%27un-template-a-votre-plugin
-    // https://jeedom.github.io/documentation/dev/fr_FR/widget_plugin
-
-    public function toHtml($_version = 'dashboard')
-    {
-        $replace = $this->preToHtml($_version);
-        $typeWidget = "alexafiretv";
-
-        $typeWidget = $this->getLogicalId();
-        if ($typeWidget != "alexafiretv_playlist") return parent::toHtml($_version);
-        if (!is_array($replace)) {
-            return $replace;
-        }
-        $version = jeedom::versionAlias($_version);
-        if ($this->getDisplay('hideOn' . $version) == 1) {
-            return '';
-        }
-        foreach ($this->getCmd('info') as $cmd) {
-            $replace['#' . $cmd->getLogicalId() . '_history#'] = '';
-            $replace['#' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
-            $replace['#' . $cmd->getLogicalId() . '#'] = $cmd->execCmd();
-            $replace['#' . $cmd->getLogicalId() . '_collect#'] = $cmd->getCollectDate();
-            if ($cmd->getLogicalId() == 'encours') {
-                $replace['#thumbnail#'] = $cmd->getDisplay('icon');
-            }
-            if ($cmd->getIsHistorized() == 1) {
-                $replace['#' . $cmd->getLogicalId() . '_history#'] = 'history cursor';
-            }
-        }
-        $replace['#height#'] = '800';
-        if ($typeWidget == "alexafiretv_playlist") {
-            if ("#playlistName#" != "") {
-                $replace['#name_display#'] = '#playlistName#';
-            }
-        }
-        return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, $typeWidget, 'alexafiretv')));
     }
 
 	public static function defaultTemplate(string $type, string $subType): string
@@ -526,24 +463,5 @@ class alexafiretvCmd extends cmd
 		$_resultat=$this->lanceCommande("test",$command);
 
 		return true;
-    }
-
-    public function getWidgetTemplateCode($_version = 'dashboard', $_clean = true, $_widgetName = '')
-    {
-        if ($_version != 'scenario') return parent::getWidgetTemplateCode($_version, $_clean, $_widgetName);
-        list($command, $arguments) = explode('?', $this->getConfiguration('request'), 2);
-        if (($command == 'speak') || ($command == 'announcement'))
-            return getTemplate('core', 'scenario', 'cmd.speak.volume', 'alexafiretv');
-        if ($command == 'reminder')
-            return getTemplate('core', 'scenario', 'cmd.reminder', 'alexafiretv');
-        if ($command == 'deleteReminder')
-            return getTemplate('core', 'scenario', 'cmd.deletereminder', 'alexafiretv');
-        if ($command == 'deleteallalarms')
-            return getTemplate('core', 'scenario', 'cmd.deleteallalarms', 'alexafiretv');
-        if ($command == 'command' && strpos($arguments, '#select#'))
-            return getTemplate('core', 'scenario', 'cmd.command', 'alexafiretv');
-        if ($command == 'alarm')
-            return getTemplate('core', 'scenario', 'cmd.alarm', 'alexafiretv');
-        return parent::getWidgetTemplateCode($_version, $_clean, $_widgetName);
     }
 }

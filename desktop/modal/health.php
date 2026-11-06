@@ -26,36 +26,30 @@ $eqLogics = alexafiretv::byType('alexafiretv');
 		<tr>
 			<th>{{Module}}</th>
 			<th>{{ID}}</th>
-			<th>{{Device}}</th>
-			<th>{{Serial}}</th>
-			<th>{{Type}}</th>
+			<th>{{Adresse IP}}</th>
 			<th>{{Présent}}</th>
-			<th>{{Date création}}</th>
+			<th>{{Allumé}}</th>
 		</tr>
 	</thead>
 	<tbody>
-	 <?php
+<?php
 foreach ($eqLogics as $eqLogic) {
-
-	if ($eqLogic->getStatus('online') == 'true') {
-		$present = 1;
-	}
-	if ($present == 1){
-		$present = '<span class="label label-success" style="font-size : 1em;" title="{{Présent}}"><i class="fa fa-check-circle"></i></span>';
+	$ip = htmlspecialchars((string) $eqLogic->getConfiguration('adresseip'), ENT_QUOTES, 'UTF-8');
+	if ($eqLogic->getStatus('online') == true) {
+		$present = '<span class="label label-success" style="font-size : 1em;" title="{{Présent}}"><i class="fas fa-check-circle"></i></span>';
 	} else {
-		$present = '<span class="label label-danger" style="font-size : 1em;" title="{{Absent}}"><i class="fa fa-times-circle"></i></span>';
+		$present = '<span class="label label-danger" style="font-size : 1em;" title="{{Absent}}"><i class="fas fa-times-circle"></i></span>';
 	}
-	
-	if ((strstr($eqLogic->getName(), "Alexa Apps")))
-		$present = '<span class="label label-warning" style="font-size : 1em;" title="{{Inconnu}}"><i class="fa fa-question-circle"></i></span>';
-
+	if ($eqLogic->getStatus('on') == true) {
+		$on = '<span class="label label-success" style="font-size : 1em;" title="{{Allumé}}"><i class="fas fa-toggle-on"></i></span>';
+	} else {
+		$on = '<span class="label label-default" style="font-size : 1em;" title="{{Éteint}}"><i class="fas fa-toggle-off"></i></span>';
+	}
 	echo '<tr><td><a href="' . $eqLogic->getLinkToConfiguration() . '" style="text-decoration: none;">' . $eqLogic->getHumanName(true) . '</a></td>';
 	echo '<td><span class="label label-info" style="font-size : 1em; cursor : default;">' . $eqLogic->getId() . '</span></td>';
-	echo '<td><span class="label label-info" style="font-size : 1em; cursor : default;">' . $eqLogic->getConfiguration('device') . '</span></td>';
-	echo '<td><span class="label label-info" style="font-size : 1em; cursor : default;">' . $eqLogic->getConfiguration('serial') . '</span></td>';
-	echo '<td><span class="label label-info" style="font-size : 1em; cursor : default;">' . $eqLogic->getConfiguration('type') . '</span></td>';
+	echo '<td><span class="label label-info" style="font-size : 1em; cursor : default;">' . ($ip !== '' ? $ip : '{{Non configurée}}') . '</span></td>';
 	echo '<td>' . $present . '</td>';
-	echo '<td><span class="label label-info" style="font-size : 1em; cursor : default;">' . $eqLogic->getConfiguration('createtime') . '</span></td></tr>';
+	echo '<td>' . $on . '</td></tr>';
 }
 ?>
 	</tbody>

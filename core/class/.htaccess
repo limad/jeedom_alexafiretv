@@ -1,2 +1,3 @@
-Order allow,deny
-Deny from all
+# "Require all denied" (mod_authz_core) et non "Order allow,deny" : la syntaxe legacy
+# perd la fusion contre l'autorisation globale *.php du .htaccess racine de Jeedom.
+Require all denied
