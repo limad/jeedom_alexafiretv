@@ -73,8 +73,5 @@
         "Supprimer": "Eliminar",
         "Type": "Tipo",
         "Visible": "Visível"
-    },
-    "plugins\/alexafiretv\/plugin_info\/install.php": {
-        "Le plugin Alexa - Fire TV est obsolète et ne peut plus être activé sur une nouvelle installation. Utilisez Alexa Premium (alexaapiv2).": ""
     }
 }
