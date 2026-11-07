@@ -154,24 +154,6 @@ class alexafiretv extends eqLogic
         }
     }
 
-    public function hasCapaorFamilyorType($thisCapa)
-    {
-
-        // Si c'est la bonne famille, on dit OK tout de suite
-        $family = $this->getConfiguration('family', "");
-        if ($thisCapa == $family) return true; // ajouté pour filtrer sur la famille (pour les groupes par exemple)
-        // Si c'est le bon type, on dit OK tout de suite
-        $type = $this->getConfiguration('type', "");
-        if ($thisCapa == $type) return true; //
-        $capa = $this->getConfiguration('capabilities', "");
-        if (((gettype($capa) == "array" && in_array($thisCapa, $capa))) || ((gettype($capa) == "string" && strpos($capa, $thisCapa) !== false))) {
-            if ($thisCapa == "REMINDERS" && $type == "A15ERDAKK5HQQG") return false;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public function refresh()
     { 
 	
