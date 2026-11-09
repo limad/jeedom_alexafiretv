@@ -27,12 +27,12 @@ foreach ($eqLogics as $eqLogic)
     <legend><i class="fas fa-cog"></i> {{Gestion}} - Alexa - Fire TV</legend>
     <div class="eqLogicThumbnailContainer">
 
-		<div class="cursor eqLogicAction logoSecondary">
-			<a href="index.php?v=d&m=alexaapi&p=alexaapi"><img  style="margin-top:-32px;" src="plugins/alexaapi/core/config/devices/default.png" width="75" height="75" style="min-height:75px !important;" />
+		<div class="cursor eqLogicAction logoPrimary" data-action="add">
+			<i class="fas fa-plus-circle"></i>
 			<br />
-			<span style="color:#42d4eb">{{Lien Alexa-API}}</span></a>
+			<span>{{Ajouter}}</span>
 		</div>
-		
+
 		<!-- Bouton d accès à la configuration -->
 		<div class="cursor eqLogicAction logoSecondary" data-action="gotoPluginConf">
 			<i class="fas fa-wrench" ></i>
@@ -78,18 +78,18 @@ $interval = $datetimecreation->diff($datetimeaujourdhui);
 		//if (($eqLogic->getStatus('online') == 'true')){
 		if (($eqLogic->getConfiguration('adresseip') == "")){
 				//echo '<i class="fas fa-power-off" style="color: red;text-shadow: 4px 4px 4px #ccc;float:right" title="Offline"></i>';
-				echo '<div style="font-size: 25px;"><i class="fas fa-network-wired" style="color: red;text-shadow: 4px 4px 4px #ccc;float:right" title="Playing"></i></div>';				
+				echo '<div style="font-size: 25px;"><i class="fas fa-network-wired" style="color: red;text-shadow: 4px 4px 4px #ccc;float:right" title="{{Adresse IP non configurée}}"></i></div>';				
 				//echo '<span class="badge-alexaapi badge-danger">Offline</span>';
 		} elseif (($eqLogic->getStatus('on') == true)){
 				//echo '<i class="fas fa-power-off" style="color: red;text-shadow: 4px 4px 4px #ccc;float:right" title="Offline"></i>';
 
-				echo '<div style="font-size: 25px;"><i class="fas fa-toggle-on" style="color: #008000;text-shadow: 4px 4px 4px #ccc;float:right" title="Playing"></i></div>';				
+				echo '<div style="font-size: 25px;"><i class="fas fa-toggle-on" style="color: #008000;text-shadow: 4px 4px 4px #ccc;float:right" title="{{Allumé}}"></i></div>';				
 				//echo '<span class="badge-alexaapi badge-danger">Offline</span>';
 		} elseif (($eqLogic->getStatus('online') == true)) {
-				echo '<div style="font-size: 20px;"><i class="fas fa-link" style="color: #008000;text-shadow: 4px 4px 4px #ccc;float:right" title="Playing"></i></div>';
+				echo '<div style="font-size: 20px;"><i class="fas fa-link" style="color: #008000;text-shadow: 4px 4px 4px #ccc;float:right" title="{{Connecté}}"></i></div>';
 				//echo '<i class="fas loisir-musical7" style="color: #2c8af6;text-shadow: 4px 4px 4px #ccc;float:right" title="Playing"></i>';
 		} elseif (($eqLogic->getStatus('online') == false)) {
-				echo '<div style="font-size: 20px;"><i class="fas fa-unlink" style="color: red;text-shadow: 4px 4px 4px #ccc;float:right" title="Playing"></i></div>';
+				echo '<div style="font-size: 20px;"><i class="fas fa-unlink" style="color: red;text-shadow: 4px 4px 4px #ccc;float:right" title="{{Déconnecté}}"></i></div>';
 		}		else {
 			if ($interval->format('%a') <1) {
 				echo '<span class="badge-alexaapi badge-success">Nouveau</span>';
@@ -236,12 +236,13 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                   <label class="col-sm-2 control-label">{{Fonctionnalités}}</label>
                   <div class="col-sm-8">
                       <span style="position:relative;top:+5px;left:+5px;font-size: 10px;" class="eqLogicAttr" data-l1key="configuration" data-l2key="capabilities"></span>
-                  </div>		      
+                  </div>
+                </div>
                 <div class="form-group">
                   <div class="col-sm-10">
                     <center>
 					
-                      <img src="core/img/no_image.gif" data-original=".jpg" id="img_device" class="img-responsive" style="max-height : 250px;" data-fallback-src="plugins/alexaapi/core/config/devices/default.png"/>
+                      <img src="core/img/no_image.gif" data-original=".jpg" id="img_device" class="img-responsive" style="max-height : 250px;" data-fallback-src="<?php echo $plugin->getPathImgIcon(); ?>"/>
                     </center>
                   </div>
                 </div>
@@ -297,5 +298,5 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 </div>
 
 <?php include_file('desktop', 'alexafiretv', 'js', 'alexafiretv'); ?>
-<?php include_file('desktop', 'alexaapi', 'css', 'alexaapi'); ?>
+<?php include_file('desktop', 'alexafiretv', 'css', 'alexafiretv'); ?>
 <?php include_file('core', 'plugin.template', 'js'); ?>

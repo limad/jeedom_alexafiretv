@@ -22,6 +22,8 @@ try {
         throw new \Exception('401 Unauthorized');
     }
 
+    ajax::init();
+
     switch (init('action')) {
         case 'forcerDefaultCmd':
             $eqLogic = alexafiretv::byId(init('id'));
