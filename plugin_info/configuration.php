@@ -1,5 +1,5 @@
 <?php
-if (!isConnect()) {
+if (!isConnect('admin')) {
     include_file('desktop', '404', 'php');
     die();
 }
