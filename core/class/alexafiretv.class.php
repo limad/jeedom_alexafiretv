@@ -259,7 +259,8 @@ class alexafiretv extends eqLogic
                     if (($LogicalId == 'volumeinfo') || ($LogicalId == 'volume')) {
                         $cmd->setConfiguration('minValue', '0');
                         $cmd->setConfiguration('maxValue', '100');
-                        $cmd->setDisplay('forceReturnLineBefore', true);
+                        // Widgets iso : jamais de retour à la ligne forcé (0 nettoie aussi les anciennes commandes).
+                        $cmd->setDisplay('forceReturnLineBefore', 0);
                     }
                     $cmd->save(); // déplacé le 19/09/2020
                 }
@@ -364,8 +365,9 @@ class alexafiretv extends eqLogic
 	public static function applyIsoTemplate(cmd $cmd, string $type, string $subType): void
 	{
 		$cmd->setTemplate('dashboard', self::defaultTemplate($type, $subType));
-		$cmd->setDisplay('forceReturnLineBefore', 1);
-		$cmd->setDisplay('forceReturnLineAfter', 1);
+		// Widgets iso : jamais de retour à la ligne forcé (0 nettoie aussi les anciennes commandes).
+		$cmd->setDisplay('forceReturnLineBefore', 0);
+		$cmd->setDisplay('forceReturnLineAfter', 0);
 	}
 
 	public function resetIsoTemplates(): int
