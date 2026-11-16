@@ -42,9 +42,9 @@ function alexafiretv_getIsoWidget()
 {
 	$pluginId = 'alexafiretv';
 	// Nouvelle version du pack : pousser un tag sur widget-iso, puis changer ces trois valeurs dans chaque plugin.
-	$packVersion = '2026.11.08';
-	$packRef     = 'v2026.11.08';
-	$packSha256  = 'acba8938a596adaed5fee1162ec3eacd1c78c3feea7ac5b078f5f85059d1d58c';
+	$packVersion = '2026.11.16';
+	$packRef     = 'v2026.11.16';
+	$packSha256  = '490bdb70a46fdb027b604e2a95efcc40e5d230f3fd62b0c06c5e691b61987b3e';
 	$zipPath  = '';
 	$unzipDir = '';
 	$installed = false;
