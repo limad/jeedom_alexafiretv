@@ -30,21 +30,19 @@ function alexafiretv_update()
 }
 
 /*
- * Pack de widgets iso (github.com/limad/widget-iso), partagé par plusieurs plugins.
+ * Pack de widgets iso (github.com/limad/widget-iso, branche beta), partagé par plusieurs plugins.
  * Fonctions préfixées par le plugin : Jeedom charge les install.php de plusieurs plugins
  * dans le même processus, un nom commun ferait tourner la copie (et le log) d'un autre.
- * Version figée : l'archive est prise sur un tag du dépôt et n'est installée que si son
- * sha256 est celui attendu. L'empreinte installée est notée dans widget_iso_version.json :
- * aucun accès réseau si ce pack (ou une version plus récente) est déjà en place.
+ * Version = date du pack, publiée dans version.json (écrit par build_zip.py). Seul ce petit
+ * fichier est lu à chaque appel : l'archive n'est téléchargée que si elle est plus récente
+ * que la version notée dans widget_iso_version.json (ou si aucun widget n'est installé).
+ * Rien à changer dans les plugins quand le pack évolue.
  * Compatible PHP 7.4 (Debian 11).
  */
 function alexafiretv_getIsoWidget()
 {
 	$pluginId = 'alexafiretv';
-	// Nouvelle version du pack : pousser un tag sur widget-iso, puis changer ces trois valeurs dans chaque plugin.
-	$packVersion = '2026.11.16';
-	$packRef     = 'v2026.11.16';
-	$packSha256  = '490bdb70a46fdb027b604e2a95efcc40e5d230f3fd62b0c06c5e691b61987b3e';
+	$branch   = 'beta';
 	$zipPath  = '';
 	$unzipDir = '';
 	$installed = false;
@@ -65,45 +63,43 @@ function alexafiretv_getIsoWidget()
 		}
 		$found = glob($dest . '/cmd.*.iso_*.html');
 		$installed = is_file($dest . '/widget_iso_by_limad44.txt') || (is_array($found) && count($found) > 0);
+		$localVersion = (isset($local['version']) && is_string($local['version']) && preg_match('/^\d+(\.\d+)*$/', $local['version'])) ? $local['version'] : '';
 
-		// 1. Rien à faire si ce pack, une version plus récente ou le gestionnaire iso_widgets est déjà en place
-		if ($installed) {
-			$skip = '';
-			$localVersion = (isset($local['version']) && is_string($local['version'])) ? $local['version'] : '';
-			if (isset($local['sha256']) && $local['sha256'] === $packSha256) {
-				$skip = 'Widgets iso ' . $packVersion . ' déjà installés';
-			} elseif (isset($local['plugin']) && $local['plugin'] === 'iso_widgets' && (int)config::byKey('active', 'iso_widgets', 0) === 1) {
-				$skip = 'Widgets iso gérés par le plugin iso_widgets';
-			} elseif (preg_match('/^\d+(\.\d+)*$/', $localVersion) && version_compare($localVersion, $packVersion, '>=')) {
-				$skip = 'Widgets iso ' . $localVersion . ' déjà installés (version embarquée : ' . $packVersion . ')';
+		// 1. Le plugin iso_widgets, s'il est actif, garde la main sur le pack
+		if ($installed && isset($local['plugin']) && $local['plugin'] === 'iso_widgets' && (int)config::byKey('active', 'iso_widgets', 0) === 1) {
+			log::add($pluginId, 'debug', 'getIsoWidget::Widgets iso gérés par le plugin iso_widgets');
+			return;
+		}
+
+		// 2. Version publiée (date du pack) : téléchargement seulement si elle est plus récente
+		$remoteVersion = '';
+		$r = alexafiretv_isoWidgetGet($branch, 'version.json');
+		if ($r['ok']) {
+			$info = json_decode($r['body'], true);
+			if (is_array($info) && isset($info['version']) && is_string($info['version']) && preg_match('/^\d+(\.\d+)*$/', $info['version'])) {
+				$remoteVersion = $info['version'];
+			} else {
+				$r['error'] = 'version.json illisible';
 			}
-			if ($skip !== '') {
-				log::add($pluginId, 'debug', 'getIsoWidget::' . $skip . ', aucun téléchargement');
+		}
+		if ($remoteVersion === '') {
+			if ($installed) {
+				log::add($pluginId, 'debug', 'getIsoWidget::Version du pack inconnue (' . $r['error'] . '), widgets installés conservés');
 				return;
 			}
+		} elseif ($installed && $localVersion !== '' && version_compare($localVersion, $remoteVersion, '>=')) {
+			log::add($pluginId, 'debug', 'getIsoWidget::Widgets iso ' . $localVersion . ' à jour, aucun téléchargement');
+			return;
 		}
+		$label = $remoteVersion !== '' ? $remoteVersion : $branch;
 
-		// 2. Téléchargement du tag : raw.githubusercontent.com, puis l'API GitHub (autre hôte) en secours.
-		// Seule une archive dont le sha256 est celui attendu est acceptée.
-		$errors = array();
-		$data = null;
-		$sources = array(
-			array('raw.githubusercontent.com', 'https://raw.githubusercontent.com/limad/widget-iso/' . $packRef . '/widget_iso.zip', array()),
-			array('api.github.com', 'https://api.github.com/repos/limad/widget-iso/contents/widget_iso.zip?ref=' . $packRef, array('Accept: application/vnd.github.raw')),
-		);
-		foreach ($sources as $src) {
-			$r = alexafiretv_isoWidgetHttp($src[1], $src[2]);
-			if (!$r['ok']) {
-				$errors[] = $src[0] . ' : ' . $r['error'];
-			} elseif (!hash_equals($packSha256, hash('sha256', $r['body']))) {
-				$errors[] = $src[0] . ' : empreinte sha256 inattendue (' . strlen($r['body']) . ' octets reçus)';
-			} else {
-				$data = $r['body'];
-				break;
-			}
+		// 3. Téléchargement de l'archive (même branche)
+		$r = alexafiretv_isoWidgetGet($branch, 'widget_iso.zip');
+		if ($r['ok'] && (strlen($r['body']) < 1024 || substr($r['body'], 0, 4) !== "PK\x03\x04")) {
+			$r = array('ok' => false, 'error' => 'archive invalide (' . strlen($r['body']) . ' octets)');
 		}
-		if ($data === null) {
-			$msg = 'getIsoWidget::Téléchargement des widgets iso ' . $packVersion . ' impossible (' . implode(' ; ', $errors) . ')';
+		if (!$r['ok']) {
+			$msg = 'getIsoWidget::Téléchargement des widgets iso ' . $label . ' impossible (' . $r['error'] . ')';
 			if ($installed) {
 				log::add($pluginId, 'warning', $msg . ', les widgets déjà installés sont conservés');
 			} else {
@@ -111,8 +107,9 @@ function alexafiretv_getIsoWidget()
 			}
 			return;
 		}
+		$data = $r['body'];
 
-		// 3. Extraction dans un dossier neuf, chemins de l'archive vérifiés avant
+		// 4. Extraction dans un dossier neuf, chemins de l'archive vérifiés avant
 		$tmpFolder = jeedom::getTmpFolder($pluginId);
 		$zipPath   = $tmpFolder . '/widget-iso.zip';
 		$unzipDir  = $tmpFolder . '/widget-iso';
@@ -152,10 +149,10 @@ function alexafiretv_getIsoWidget()
 			$root .= '/' . $sub[0];
 		}
 
-		// 4. Copie des seuls fichiers changés (custom.* existants jamais écrasés), puis empreinte notée
+		// 5. Copie des seuls fichiers changés (custom.* existants jamais écrasés), puis version notée
 		$copied = alexafiretv_isoWidgetCopy($root, $dest, $pluginId);
-		alexafiretv_isoWidgetWriteMarker($marker, $packVersion, $packRef, $packSha256, strlen($data), $pluginId);
-		log::add($pluginId, 'info', 'getIsoWidget::Widgets iso ' . $packVersion . ' installés (' . $copied . ' fichier(s) mis à jour)');
+		alexafiretv_isoWidgetWriteMarker($marker, $remoteVersion, $branch, hash('sha256', $data), strlen($data), $pluginId);
+		log::add($pluginId, 'info', 'getIsoWidget::Widgets iso ' . $label . ' installés (' . $copied . ' fichier(s) mis à jour)');
 	} catch (\Throwable $e) {
 		log::add($pluginId, $installed ? 'warning' : 'error', 'getIsoWidget::' . $e->getMessage());
 	} finally {
@@ -166,6 +163,24 @@ function alexafiretv_getIsoWidget()
 			@unlink($zipPath);
 		}
 	}
+}
+
+/** Fichier du dépôt widget-iso : raw.githubusercontent.com, puis l'API GitHub (autre hôte) en secours. */
+function alexafiretv_isoWidgetGet($branch, $file)
+{
+	$errors = array();
+	$sources = array(
+		array('raw.githubusercontent.com', 'https://raw.githubusercontent.com/limad/widget-iso/' . $branch . '/' . $file, array()),
+		array('api.github.com', 'https://api.github.com/repos/limad/widget-iso/contents/' . $file . '?ref=' . $branch, array('Accept: application/vnd.github.raw')),
+	);
+	foreach ($sources as $src) {
+		$r = alexafiretv_isoWidgetHttp($src[1], $src[2]);
+		if ($r['ok']) {
+			return $r;
+		}
+		$errors[] = $src[0] . ' : ' . $r['error'];
+	}
+	return array('ok' => false, 'code' => 0, 'body' => '', 'error' => implode(' ; ', $errors));
 }
 
 /** Requête HTTPS GET ; renvoie ok, code, body et la cause en cas d'échec. */
